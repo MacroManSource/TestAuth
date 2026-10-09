@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#10131b">
+<title>PlayerScope — Steam Profile Explorer</title>
+<style>
+:root{color-scheme:dark;--bg:#0c0f16;--panel:#151a25;--panel2:#1b2230;--line:#2a3445;--muted:#9aa8bc;--text:#f3f6fb;--accent:#77aaff;--green:#72e0b0;--radius:20px}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 12% 0%,#1a2a47 0,transparent 35%),radial-gradient(ellipse at 100% 20%,#24203c 0,transparent 30%),var(--bg);color:var(--text);font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+a{color:inherit;text-decoration:none}.wrap{max-width:1240px;margin:auto;padding:0 24px}.topbar{height:76px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #ffffff12}.brand{display:flex;align-items:center;gap:12px;font-weight:850;letter-spacing:.2px;font-size:18px}.brandmark{display:grid;place-items:center;width:38px;height:38px;border-radius:13px;background:linear-gradient(135deg,#8bbcff,#6b70ff);color:#101522;font-size:20px;box-shadow:0 8px 28px #628aff44}.topmeta{color:var(--muted);font-size:13px}.hero{padding:44px 0 24px}.eyebrow{color:#8dbaff;text-transform:uppercase;letter-spacing:2px;font-size:11px;font-weight:800}.hero h1{font-size:clamp(30px,5vw,52px);line-height:1.08;letter-spacing:-1.7px;margin:10px 0 12px}.hero p{max-width:680px;color:var(--muted);margin:0;font-size:16px}.searchbox{margin-top:26px;padding:16px;background:#151b28d9;border:1px solid var(--line);border-radius:22px;box-shadow:0 18px 60px #0003;display:grid;grid-template-columns:1fr auto;gap:12px}.searchrow{display:flex;gap:10px;min-width:0}.searchrow input{width:100%;min-width:0;background:#0d121b;border:1px solid #303b4e;border-radius:13px;color:var(--text);padding:15px 16px;font:inherit;outline:none}.searchrow input:focus{border-color:#77aaff;box-shadow:0 0 0 3px #77aaff20}.btn{border:0;border-radius:13px;padding:0 22px;min-height:50px;font:700 14px inherit;background:linear-gradient(135deg,#8fc0ff,#7479ff);color:#0b1020;cursor:pointer;white-space:nowrap;transition:transform .15s,filter .15s}.btn:hover{filter:brightness(1.08);transform:translateY(-1px)}.btn:disabled{opacity:.55;cursor:wait;transform:none}.hint{grid-column:1/-1;color:var(--muted);font-size:12px;padding:0 3px}.hint code{color:#c4d8ff}.status{display:none;margin-top:14px;padding:13px 15px;border:1px solid var(--line);border-radius:13px;background:#151b28;color:#c5d2e6}.status.show{display:block}.status.error{border-color:#8e414c;color:#ffb7c0}.status.ok{border-color:#326d5b;color:#a9f4d5}
+main{padding-bottom:64px}.profile{display:none}.profile.show{display:block}.cover{height:220px;border-radius:24px;overflow:hidden;position:relative;background:linear-gradient(115deg,#172e4a,#222849 55%,#402a50);border:1px solid #ffffff15;margin-top:24px}.cover:before,.cover:after{content:"";position:absolute;border-radius:50%;filter:blur(1px)}.cover:before{width:420px;height:420px;right:8%;top:-250px;border:1px solid #9ec9ff44;box-shadow:0 0 0 35px #9ec9ff08,0 0 0 75px #9ec9ff06}.cover:after{width:250px;height:250px;right:25%;top:70px;background:#7d8cff18}.coverlabel{position:absolute;left:24px;bottom:20px;color:#dce7ffb8;font-size:11px;letter-spacing:2px;text-transform:uppercase}.identity{display:flex;gap:22px;align-items:flex-end;margin:-58px 28px 24px;position:relative}.avatar{width:124px;height:124px;object-fit:cover;border:5px solid var(--bg);border-radius:25px;background:#263247;box-shadow:0 10px 30px #0005}.idtext{padding-bottom:8px;min-width:0;flex:1}.name-line{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.name-line h2{font-size:clamp(23px,3vw,34px);line-height:1.15;margin:0;letter-spacing:-.7px;overflow-wrap:anywhere}.pill{font-size:11px;font-weight:800;padding:5px 9px;border-radius:999px;background:#1d654b;color:#a9f4d5}.pill.offline{background:#303848;color:#b5c0d0}.subline{font-size:13px;color:var(--muted);margin-top:7px;overflow-wrap:anywhere}.profile-actions{display:flex;gap:9px;flex-wrap:wrap;padding-bottom:8px}.secondary{border:1px solid #344056;background:#202838;color:#e5edfa;border-radius:11px;padding:11px 14px;font-weight:700;font-size:12px;cursor:pointer}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:0 0 22px}.stat{background:linear-gradient(145deg,#192130,#131924);border:1px solid var(--line);padding:18px;border-radius:17px;min-width:0}.stat .label{color:var(--muted);font-size:12px}.stat .value{font-size:25px;font-weight:800;letter-spacing:-.6px;margin-top:3px;overflow-wrap:anywhere}.layout{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(280px,.7fr);gap:18px}.panel{background:#141a25e8;border:1px solid var(--line);border-radius:20px;padding:22px;min-width:0;margin-bottom:18px}.panelhead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:17px}.panel h3{margin:0;font-size:17px;letter-spacing:-.2px}.muted{color:var(--muted)}.tiny{font-size:12px}.game-list{display:grid;gap:10px}.game{display:grid;grid-template-columns:66px minmax(0,1fr) auto;gap:13px;align-items:center;padding:10px;border:1px solid #ffffff0b;border-radius:13px;background:#ffffff04}.game img{width:66px;height:50px;object-fit:cover;border-radius:8px;background:#293348}.game-name{font-weight:750;line-height:1.25;overflow-wrap:anywhere}.game-meta{font-size:12px;color:var(--muted);margin-top:5px}.hours{font-weight:800;font-size:13px;white-space:nowrap}.empty{padding:25px;text-align:center;color:var(--muted);border:1px dashed #344056;border-radius:14px}.detail-list{display:grid;gap:0}.detail{display:flex;justify-content:space-between;gap:15px;padding:12px 0;border-bottom:1px solid #ffffff0c;font-size:13px}.detail:last-child{border-bottom:0}.detail span:first-child{color:var(--muted)}.detail span:last-child{text-align:right;overflow-wrap:anywhere}.ban-ok{color:var(--green);font-weight:800}.ban-warn{color:#ffc18d;font-weight:800}.privacy-note{font-size:12px;color:var(--muted);line-height:1.6;margin-top:15px}.footer{color:#748198;text-align:center;font-size:12px;padding:20px 0 35px}.keypanel{margin-top:18px;background:#101722;border:1px solid #35435a;border-radius:16px;padding:16px}.keypanel summary{font-weight:750;cursor:pointer}.keyfields{display:grid;grid-template-columns:1fr auto;gap:10px;margin-top:13px}.keyfields input{min-width:0;background:#0b1018;border:1px solid #344056;border-radius:10px;color:white;padding:12px;font:inherit}.keyfields button{border:1px solid #344056;background:#202838;color:white;border-radius:10px;padding:0 14px;cursor:pointer}.keywarn{font-size:12px;color:#e8c68e;margin-top:10px}.demo-note{margin-top:18px;font-size:12px;color:#aab7cb}
+@media(max-width:800px){.wrap{padding:0 16px}.hero{padding-top:32px}.topbar{height:66px}.topmeta{display:none}.searchbox{grid-template-columns:1fr}.btn{width:100%;min-height:48px}.layout{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}.cover{height:170px}.identity{margin:-45px 16px 22px;gap:14px;flex-wrap:wrap;align-items:flex-end}.avatar{width:96px;height:96px;border-radius:20px}.idtext{padding-bottom:3px;min-width:calc(100% - 120px)}.profile-actions{width:100%;padding:0}.profile-actions .secondary{flex:1}.stat{padding:15px}.stat .value{font-size:22px}.panel{padding:17px}.keyfields{grid-template-columns:1fr}.keyfields button{padding:12px}.game{grid-template-columns:58px minmax(0,1fr);gap:11px}.game img{width:58px;height:45px}.hours{grid-column:2;margin-top:-5px}.game-meta{line-height:1.4}}
+@media(max-width:390px){.wrap{padding:0 12px}.brand{font-size:16px}.brandmark{width:34px;height:34px}.stats{gap:8px}.stat{padding:12px}.stat .value{font-size:20px}.name-line h2{font-size:22px}.identity{margin-left:10px;margin-right:10px}.avatar{width:82px;height:82px}.idtext{min-width:calc(100% - 100px)}.panel{padding:14px}}
+</style>
+</head>
+<body>
+<header class="wrap topbar">
+  <a class="brand" href="#"><span class="brandmark">◈</span><span>PlayerScope</span></a>
+  <div class="topmeta">STEAM COMMUNITY EXPLORER · RESPONSIVE DEMO</div>
+</header>
+<section class="wrap hero">
+  <div class="eyebrow">PLAYER INTELLIGENCE</div>
+  <h1>Узнай, кто стоит<br>за игровым ником.</h1>
+  <p>Поиск профилей Steam, игровая библиотека, последние игровые сессии и публичная информация об аккаунте — в едином интерфейсе.</p>
+  <form class="searchbox" id="searchForm">
+    <div class="searchrow"><input id="query" autocomplete="off" placeholder="SteamID64, ссылка или vanity-ник" aria-label="SteamID64, ссылка или vanity-ник" required><button class="btn" id="searchBtn" type="submit">Найти игрока ↗</button></div>
+    <div class="hint">Пример SteamID64: <code>76561197960435530</code> · Можно вставить ссылку вида steamcommunity.com/id/username</div>
+  </form>
+  <div class="status" id="status" role="status"></div>
+  <details class="keypanel" id="keyPanel">
+    <summary>Настройки API — подключить реальные данные</summary>
+    <div class="keyfields"><input id="apiKey" type="password" autocomplete="off" placeholder="Steam Web API Key"><button id="saveKey" type="button">Использовать в этой вкладке</button></div>
+    <div class="keywarn">Важно: этот демонстрационный HTML делает запросы прямо из браузера. Ключ не сохраняется на сервере, но остаётся доступен в текущей вкладке и инструментах разработчика. Для публичного сайта не встраивайте ключ во фронтенд — используйте собственный backend или Supabase Edge Function.</div>
+  </details>
+  <div class="demo-note">Сначала можно посмотреть демонстрационный профиль. Для живых запросов нужен Steam Web API Key.</div>
+</section>
+<main class="wrap">
+<section class="profile" id="profile">
+  <div class="cover"><div class="coverlabel">PLAYER PROFILE / STEAM NETWORK</div></div>
+  <div class="identity">
+    <img class="avatar" id="avatar" alt="Аватар игрока" src="">
+    <div class="idtext"><div class="name-line"><h2 id="playerName">Игрок</h2><span class="pill" id="onlineState">ONLINE</span></div><div class="subline" id="playerSub"></div></div>
+    <div class="profile-actions"><a class="secondary" id="steamLink" href="#" target="_blank" rel="noopener">Открыть Steam ↗</a><button class="secondary" id="copyId" type="button">Копировать ID</button></div>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="label">Игр в библиотеке</div><div class="value" id="gameCount">—</div></div>
+    <div class="stat"><div class="label">Всего часов</div><div class="value" id="totalHours">—</div></div>
+    <div class="stat"><div class="label">Последние 2 недели</div><div class="value" id="recentHours">—</div></div>
+    <div class="stat"><div class="label">VAC-баны</div><div class="value" id="vacCount">—</div></div>
+  </div>
+  <div class="layout">
+    <div>
+      <section class="panel"><div class="panelhead"><h3>Недавно запускал</h3><span class="muted tiny" id="recentCount"></span></div><div class="game-list" id="recentGames"><div class="empty">Здесь появятся последние игры.</div></div></section>
+      <section class="panel"><div class="panelhead"><h3>Игровая библиотека</h3><span class="muted tiny" id="ownedCount"></span></div><div class="game-list" id="ownedGames"><div class="empty">Здесь появятся игры из открытой библиотеки.</div></div><button class="secondary" id="showMore" type="button" style="display:none;width:100%;margin-top:13px">Показать ещё</button></section>
+    </div>
+    <div>
+      <section class="panel"><div class="panelhead"><h3>Информация об аккаунте</h3></div><div class="detail-list" id="accountDetails"></div></section>
+      <section class="panel"><div class="panelhead"><h3>Статус безопасности</h3></div><div class="detail-list" id="securityDetails"></div><div class="privacy-note">Данные доступны только в объёме, разрешённом настройками приватности профиля и методами Steam Web API. Закрытые библиотеки и скрытая информация не обходятся.</div></section>
+    </div>
+  </div>
+</section>
+</main>
+<footer class="wrap footer">PlayerScope — независимый концепт интерфейса. Не является официальным продуктом Valve или Steam.</footer>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  let apiKey = '';
+  let currentSteamId = '';
+  let owned = [];
+  let ownedVisible = 8;
+  const demo = {
+    steamid:'76561197960435530', personaname:'Aperture Explorer', avatarfull:'https://avatars.steamstatic.com/1c16a968a3cf79bdae96c2c494e3e5e03_full.jpg',
+    profileurl:'https://steamcommunity.com/profiles/76561197960435530/', communityvisibilitystate:3, profilestate:1, personastate:1,
+    timecreated:1100000000, loccountrycode:'US'
+  };
+  function setStatus(msg,type=''){const el=$('status');el.textContent=msg;el.className='status show '+type;}
+  function hideStatus(){$('status').className='status';}
+  function fmtDate(unix){if(!unix)return 'Не указана';return new Date(unix*1000).toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric'});}
+  function number(n){return Number(n||0).toLocaleString('ru-RU');}
+  function hours(min){return (Number(min||0)/60).toLocaleString('ru-RU',{maximumFractionDigits:1});}
+  function stateText(p){return ({0:'Не в сети',1:'В сети',2:'Занят',3:'Не беспокоить',4:'Отошёл',5:'Спит',6:'Играет'})[p]||'Не в сети';}
+  function setOnline(p){
+    const playing=!!p.gameextrainfo, online=Number(p.personastate)>0;
+    $('onlineState').textContent=playing?'В игре: '+p.gameextrainfo:stateText(p.personastate);
+    $('onlineState').className='pill'+(!online?' offline':'');
+  }
+  function detail(label,value){return `<div class="detail"><span>${label}</span><span>${value||'—'}</span></div>`;}
+  function safe(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+  function gameCard(g){
+    const img=g.img_icon_url&&g.appid?`https://media.steampowered.com/steamcommunity/public/images/apps/${g.appid}/${g.img_icon_url}.jpg`:(g.appid?`https://cdn.cloudflare.steamstatic.com/steam/apps/${g.appid}/header.jpg`:'');
+    return `<a class="game" href="https://store.steampowered.com/app/${g.appid||0}/" target="_blank" rel="noopener"><img loading="lazy" src="${img}" alt="" onerror="this.style.visibility='hidden'"><div><div class="game-name">${safe(g.name||'Неизвестная игра')}</div><div class="game-meta">${g.playtime_2weeks!=null?'За 2 недели: '+hours(g.playtime_2weeks)+' ч.':'Steam AppID: '+(g.appid||'—')}</div></div><div class="hours">${hours(g.playtime_forever)} ч.</div></a>`;
+  }
+  function renderGames(list,target,emptyText){$(target).innerHTML=list.length?list.map(gameCard).join(''):`<div class="empty">${emptyText}</div>`;}
+  function renderOwned(){
+    const sorted=[...owned].sort((a,b)=>(b.playtime_forever||0)-(a.playtime_forever||0));
+    renderGames(sorted.slice(0,ownedVisible),'ownedGames','Библиотека скрыта, пуста или недоступна.');
+    $('showMore').style.display=sorted.length>ownedVisible?'block':'none';
+    $('showMore').textContent=`Показать ещё (${sorted.length-ownedVisible})`;
+    $('ownedCount').textContent=sorted.length?`${number(sorted.length)} игр`:'';
+  }
+  function renderProfile(p,bans={},gamesData=null,recentData=null){
+    currentSteamId=p.steamid;
+    $('profile').classList.add('show');
+    $('avatar').src=p.avatarfull||p.avatarmedium||p.avatar||'';
+    $('playerName').textContent=p.personaname||'Steam Player';
+    $('playerSub').textContent='SteamID64: '+p.steamid+(p.realname?' · '+p.realname:'')+(p.loccountrycode?' · '+p.loccountrycode:'');
+    $('steamLink').href=p.profileurl||'https://steamcommunity.com/profiles/'+p.steamid+'/';
+    setOnline(p);
+    const games=gamesData?.response?.games||[];
+    const recent=recentData?.response?.games||[];
+    owned=games;ownedVisible=8;
+    $('gameCount').textContent=gamesData?.response?.game_count!=null?number(gamesData.response.game_count):(p.communityvisibilitystate===3?'—':'Закрыто');
+    $('totalHours').textContent=games.length?number(Math.round(games.reduce((s,g)=>s+(g.playtime_forever||0),0)/60)):'—';
+    $('recentHours').textContent=recent.length?number(Math.round(recent.reduce((s,g)=>s+(g.playtime_2weeks||0),0)/60)):'—';
+    const ban=bans.players?.[0]||{};
+    $('vacCount').textContent=ban.NumberOfVACBans!=null?String(ban.NumberOfVACBans):'—';
+    $('recentCount').textContent=recent.length?`${recent.length} игр за 2 недели`:'';
+    renderGames(recent,'recentGames','Нет данных о недавно запущенных играх или список недоступен.');
+    renderOwned();
+    $('accountDetails').innerHTML=
+      detail('SteamID64',safe(p.steamid))+
+      detail('Создан',fmtDate(p.timecreated))+
+      detail('Последний выход',fmtDate(p.lastlogoff))+
+      detail('Видимость профиля',p.communityvisibilitystate===3?'Публичный':p.communityvisibilitystate===2?'Только для друзей':'Ограниченный / неизвестно')+
+      detail('Статус аккаунта',p.profilestate===1?'Профиль настроен':'Профиль не настроен')+
+      detail('Основная группа',p.primaryclanid?safe(p.primaryclanid):'Не указана');
+    $('securityDetails').innerHTML=
+      detail('VAC-баны',ban.NumberOfVACBans!=null?`<span class="${ban.NumberOfVACBans?'ban-warn':'ban-ok'}">${number(ban.NumberOfVACBans)}</span>`:'Недоступно')+
+      detail('Баны сообщества',ban.NumberOfGameBans!=null?number(ban.NumberOfGameBans):'Недоступно')+
+      detail('Дней с последнего бана',ban.DaysSinceLastBan!=null?number(ban.DaysSinceLastBan):'—')+
+      detail('Публичная библиотека',gamesData?'Данные получены':'Не загружена');
+    $('profile').scrollIntoView({behavior:'smooth',block:'start'});
+  }
+  async function api(path,params){
+    const url=new URL('https://api.steampowered.com/'+path);
+    Object.entries({...params,key:apiKey,format:'json'}).forEach(([k,v])=>url.searchParams.set(k,v));
+    const res=await fetch(url);
+    if(!res.ok)throw new Error('Steam API ответил HTTP '+res.status+'. Проверьте ключ и доступность метода.');
+    return res.json();
+  }
+  function extractInput(raw){
+    const s=raw.trim();
+    const urlMatch=s.match(/steamcommunity\.com\/(?:profiles|id)\/([^/?#]+)/i);
+    return urlMatch?{value:urlMatch[1],isUrl:true}:{value:s,isUrl:false};
+  }
+  async function resolveSteamId(raw){
+    const {value}=extractInput(raw);
+    if(/^\d{17}$/.test(value))return value;
+    const vanity=value.replace(/^@/,'').replace(/^\/+|\/+$/g,'');
+    const result=await api('ISteamUser/ResolveVanityURL/v1/',{vanityurl:vanity});
+    if(result.response?.success===1&&result.response.steamid)return result.response.steamid;
+    throw new Error('Не удалось найти профиль по этому нику. Введите SteamID64 или точный vanity-адрес из ссылки.');
+  }
+  async function search(raw){
+    hideStatus();
+    if(!apiKey){
+      const value=extractInput(raw).value;
+      if(/^\d{17}$/.test(value)){
+        setStatus('Для загрузки реального профиля укажите Steam Web API Key в настройках ниже. Сейчас показывается демонстрационный профиль.','');
+        renderProfile({...demo,steamid:value,personaname:'Steam Player '+value.slice(-4),profileurl:'https://steamcommunity.com/profiles/'+value+'/'},{},{response:{games:[],game_count:0}},{response:{games:[]}});
+      }else{
+        setStatus('Введите Steam Web API Key в настройках ниже, затем повторите поиск. Для поиска по vanity-нику требуется обращение к Steam Web API.','error');
+      }
+      return;
+    }
+    $('searchBtn').disabled=true;$('searchBtn').textContent='Ищем…';
+    try{
+      const id=await resolveSteamId(raw);
+      const [summary,bans]=await Promise.all([
+        api('ISteamUser/GetPlayerSummaries/v2/',{steamids:id}),
+        api('ISteamUser/GetPlayerBans/v1/',{steamids:id}).catch(()=>({players:[]}))
+      ]);
+      const player=summary.response?.players?.[0];
+      if(!player)throw new Error('Steam не вернул профиль. Проверьте SteamID или ссылку.');
+      const [games,recent]=await Promise.all([
+        api('IPlayerService/GetOwnedGames/v1/',{steamid:id,include_appinfo:1,include_played_free_games:1}).catch(()=>null),
+        api('IPlayerService/GetRecentlyPlayedGames/v1/',{steamid:id,count:10}).catch(()=>null)
+      ]);
+      renderProfile(player,bans,games,recent);
+      setStatus('Профиль загружен. Некоторые поля могут отсутствовать из-за настроек приватности.','ok');
+    }catch(err){
+      setStatus(err.message+' Если браузер сообщает о CORS/network error, используйте backend-прокси: браузерный HTML не гарантирует прямой доступ к API Steam.','error');
+    }finally{$('searchBtn').disabled=false;$('searchBtn').textContent='Найти игрока ↗';}
+  }
+  $('searchForm').addEventListener('submit',e=>{e.preventDefault();if($('query').value.trim())search($('query').value);});
+  $('saveKey').addEventListener('click',()=>{apiKey=$('apiKey').value.trim();if(apiKey){setStatus('Ключ принят только в памяти этой вкладки. Теперь можно искать реальные профили.','ok');}else setStatus('Введите Steam Web API Key.','error');});
+  $('showMore').addEventListener('click',()=>{ownedVisible+=8;renderOwned();});
+  $('copyId').addEventListener('click',()=>{
+    if(!currentSteamId)return;
+    const t=document.createElement('textarea');t.value=currentSteamId;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();
+    try{document.execCommand('copy');setStatus('SteamID64 скопирован.','ok');}catch(e){setStatus('Не удалось скопировать автоматически: '+currentSteamId,'error');}
+    t.remove();
+  });
+  // Начальный пример интерфейса — без подмены реальных данных за результат поиска.
+  renderProfile(demo,{players:[{NumberOfVACBans:0,NumberOfGameBans:0,DaysSinceLastBan:0}]},{response:{games:[
+    {appid:730,name:'Counter-Strike 2',playtime_forever:12420,img_icon_url:''},
+    {appid:570,name:'Dota 2',playtime_forever:8340,img_icon_url:''},
+    {appid:1091500,name:'Cyberpunk 2077',playtime_forever:6210,img_icon_url:''},
+    {appid:1245620,name:'ELDEN RING',playtime_forever:4890,img_icon_url:''}
+  ],game_count:128}},{response:{games:[
+    {appid:730,name:'Counter-Strike 2',playtime_forever:12420,playtime_2weeks:840},
+    {appid:570,name:'Dota 2',playtime_forever:8340,playtime_2weeks:320},
+    {appid:1091500,name:'Cyberpunk 2077',playtime_forever:6210,playtime_2weeks:115}
+  ]}});
+  setStatus('Демонстрационный профиль показан для предпросмотра дизайна. Введите свой API Key, чтобы загрузить данные Steam.','');
+})();
+</script>
+</body>
+</html>
