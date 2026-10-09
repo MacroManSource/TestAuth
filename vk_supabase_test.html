@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VK ID × Supabase — тест авторизации</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1020;--panel:rgba(22,30,53,.82);--line:rgba(255,255,255,.12);--muted:#9ba8c7;--text:#f4f7ff;--blue:#0077ff;--green:#42d392}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--text);background:radial-gradient(ellipse at 15% 0%,#182d58 0,transparent 45%),radial-gradient(ellipse at 100% 100%,#17244a 0,transparent 40%),var(--bg);display:grid;place-items:center;padding:22px}
+main{width:min(100%,620px)}.brand{display:flex;align-items:center;gap:12px;margin-bottom:22px}.mark{width:48px;height:48px;border-radius:16px;background:linear-gradient(145deg,#1687ff,#0054cb);display:grid;place-items:center;font-size:24px;font-weight:800;box-shadow:0 10px 35px #006aff44}.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#7fb8ff}.brand h1{font-size:21px;margin:3px 0 0}.panel{background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:24px;backdrop-filter:blur(22px);box-shadow:0 24px 70px #0005}.intro h2{font-size:25px;margin:0 0 8px}.intro p{color:var(--muted);line-height:1.5;margin:0 0 22px}.fields{display:grid;gap:13px}.field label{display:block;font-size:13px;color:#c5cfea;margin:0 0 7px}.field input{width:100%;padding:13px 14px;border-radius:12px;border:1px solid var(--line);background:#0a1020;color:var(--text);outline:none;font:inherit}.field input:focus{border-color:#438dff;box-shadow:0 0 0 3px #438dff22}.actions{display:grid;gap:10px;margin-top:18px}.btn{border:0;border-radius:13px;padding:14px 16px;font:600 15px inherit;cursor:pointer;transition:transform .15s,filter .15s}.btn:hover{filter:brightness(1.08);transform:translateY(-1px)}.btn:disabled{opacity:.55;cursor:wait;transform:none}.vk{background:linear-gradient(135deg,#1687ff,#0062dc);color:white}.secondary{background:#ffffff0b;border:1px solid var(--line);color:var(--text)}.status{margin-top:17px;padding:12px 14px;border-radius:12px;background:#ffffff08;border:1px solid var(--line);font-size:13px;line-height:1.5;overflow-wrap:anywhere}.status.good{border-color:#42d39266;color:#b6ffdc}.status.bad{border-color:#ff777766;color:#ffc3c3}.status small{color:var(--muted)}.profile{display:none;margin-top:18px;padding:15px;border:1px solid var(--line);border-radius:15px}.profile-head{display:flex;align-items:center;gap:12px}.avatar{width:52px;height:52px;border-radius:50%;object-fit:cover;background:#263451}.profile h3{margin:0 0 4px}.profile p{margin:0;color:var(--muted);font-size:13px}.data{margin-top:12px;font:12px/1.5 ui-monospace,SFMono-Regular,monospace;white-space:pre-wrap;overflow-wrap:anywhere;color:#b9c8e8}.note{font-size:12px;color:var(--muted);line-height:1.55;margin:17px 2px 0}.note strong{color:#e7eeff}.footer{margin-top:15px;text-align:center;color:#7180a4;font-size:11px}
+</style>
+</head>
+<body>
+<main>
+  <div class="brand"><div class="mark">VK</div><div><div class="eyebrow">AUTH LAB</div><h1>VK ID × Supabase</h1></div></div>
+  <section class="panel">
+    <div class="intro"><h2>Тестовая авторизация</h2><p>Проверка входа через VK ID и соединения с Supabase. Страница работает как один HTML-файл, без собственного сервера.</p></div>
+    <div class="fields">
+      <div class="field"><label for="vkAppId">VK ID — ID приложения (APP_ID)</label><input id="vkAppId" inputmode="numeric" placeholder="Например, 12345678"></div>
+      <div class="field"><label for="redirect">Redirect URL — должен совпадать с настройкой VK ID</label><input id="redirect" placeholder="https://example.com/vk_supabase_test.html"></div>
+      <div class="field"><label for="supabaseUrl">Supabase Project URL</label><input id="supabaseUrl" placeholder="https://xxxxxxxx.supabase.co"></div>
+      <div class="field"><label for="supabaseKey">Supabase anon / publishable key</label><input id="supabaseKey" placeholder="sb_publishable_… или legacy anon key"></div>
+    </div>
+    <div class="actions">
+      <button class="btn vk" id="loginBtn">Войти через VK ID</button>
+      <button class="btn secondary" id="testSbBtn">Проверить подключение к Supabase</button>
+      <button class="btn secondary" id="logoutBtn">Очистить тестовую сессию</button>
+    </div>
+    <div id="status" class="status">Готово к настройке. Заполните APP_ID и Redirect URL.</div>
+    <div id="profile" class="profile"><div class="profile-head"><img id="avatar" class="avatar" alt=""><div><h3 id="name">Пользователь VK</h3><p id="vkid"></p></div></div><div id="userData" class="data"></div></div>
+  </section>
+  <p class="note"><strong>Важно:</strong> VK ID и Supabase Auth — два разных этапа. Этот прототип запускает VK ID OAuth и показывает результат профиля, а также проверяет доступность Supabase. Он не создаёт Supabase Auth-сессию автоматически: для этого нужен серверный обмен/проверка личности (например, Supabase Edge Function с безопасной серверной логикой). Не вставляйте сюда service_role key или VK client secret.</p>
+  <div class="footer">Локальный тестовый интерфейс · ключи не сохраняются в localStorage</div>
+</main>
+<script src="https://unpkg.com/@vkid/sdk@2.6.1/dist-sdk/umd/index.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const status = $('status');
+  let supabaseClient = null;
+  let vkConfigured = false;
+  function say(message, kind='') { status.className = 'status' + (kind ? ' ' + kind : ''); status.textContent = message; }
+  function configSupabase() {
+    const url = $('supabaseUrl').value.trim();
+    const key = $('supabaseKey').value.trim();
+    if (!url || !key) throw new Error('Укажите Supabase Project URL и anon/publishable key.');
+    if (!/^https:\/\/.+/.test(url)) throw new Error('Supabase URL должен начинаться с https://');
+    if (!window.supabase?.createClient) throw new Error('Не загрузилась библиотека Supabase JS. Проверьте подключение к CDN.');
+    supabaseClient = window.supabase.createClient(url, key);
+    return supabaseClient;
+  }
+  $('testSbBtn').addEventListener('click', async () => {
+    try {
+      say('Проверяем соединение с Supabase…');
+      const client = configSupabase();
+      const { data, error } = await client.auth.getSession();
+      if (error) throw error;
+      say('Supabase доступен. Клиент инициализирован; активная Supabase Auth-сессия: ' + (data.session ? 'есть' : 'нет') + '.', 'good');
+    } catch (e) { say('Ошибка Supabase: ' + (e?.message || String(e)), 'bad'); }
+  });
+  $('loginBtn').addEventListener('click', async () => {
+    try {
+      const appId = $('vkAppId').value.trim();
+      const redirectUrl = $('redirect').value.trim() || location.href.split('?')[0].split('#')[0];
+      if (!appId) throw new Error('Укажите ID приложения VK ID (APP_ID).');
+      if (!/^https?:\/\//.test(redirectUrl)) throw new Error('Redirect URL должен быть полным URL.');
+      if (!window.VKID) throw new Error('Не загрузился VK ID SDK. Проверьте интернет-соединение.');
+      const state = crypto.randomUUID();
+      const codeVerifier = Array.from(crypto.getRandomValues(new Uint8Array(32)), b => b.toString(16).padStart(2,'0')).join('');
+      sessionStorage.setItem('vkid_test_state', state);
+      sessionStorage.setItem('vkid_test_verifier', codeVerifier);
+      window.VKID.Config.init({
+        app: Number(appId),
+        redirectUrl,
+        state,
+        codeVerifier,
+        scope: 'email'
+      });
+      say('Открываем окно авторизации VK ID…');
+      await window.VKID.Auth.login();
+    } catch (e) { say('Не удалось запустить VK ID: ' + (e?.message || String(e)), 'bad'); }
+  });
+  $('logoutBtn').addEventListener('click', async () => {
+    try { if (supabaseClient) await supabaseClient.auth.signOut(); } catch (_) {}
+    sessionStorage.removeItem('vkid_test_state');
+    sessionStorage.removeItem('vkid_test_verifier');
+    $('profile').style.display = 'none';
+    say('Локальные данные теста очищены. Если VK ID уже авторизован в браузере, это не завершает его сессию на стороне VK.');
+  });
+  async function handleCallback() {
+    const params = new URLSearchParams(location.search);
+    const code = params.get('code');
+    const error = params.get('error');
+    if (error) { say('VK ID вернул ошибку: ' + error + (params.get('error_description') ? ' — ' + params.get('error_description') : ''), 'bad'); return; }
+    if (!code) return;
+    const expectedState = sessionStorage.getItem('vkid_test_state');
+    const receivedState = params.get('state');
+    if (expectedState && receivedState && expectedState !== receivedState) {
+      say('Проверка state не пройдена. Запустите авторизацию заново.', 'bad'); return;
+    }
+    try {
+      say('VK ID вернул код авторизации. Проверяем, доступен ли профиль через SDK…');
+      // The SDK owns the OAuth exchange and may require device_id from the redirect.
+      const deviceId = params.get('device_id');
+      if (!deviceId) {
+        say('VK ID вернул code, но в URL не найден device_id. В зависимости от конфигурации приложения используйте официальный SDK flow и его callback-обработчик. Код не отправлялся в Supabase.', 'bad');
+        return;
+      }
+      const verifier = sessionStorage.getItem('vkid_test_verifier');
+      const tokens = await window.VKID.Auth.exchangeCode(code, deviceId, verifier || undefined);
+      const accessToken = tokens?.access_token;
+      if (!accessToken) throw new Error('SDK не вернул access_token.');
+      const info = await window.VKID.Auth.userInfo(accessToken);
+      const user = info?.user || info?.user_info || info;
+      const first = user?.first_name || '';
+      const last = user?.last_name || '';
+      $('name').textContent = (first + ' ' + last).trim() || 'Пользователь VK';
+      $('vkid').textContent = 'VK ID: ' + (user?.user_id || user?.id || 'получен; формат ответа зависит от версии SDK');
+      $('avatar').src = user?.avatar || user?.photo_200 || user?.photo_100 || '';
+      $('userData').textContent = JSON.stringify({profile: user, vk_token_received: true, supabase_auth_session_created: false}, null, 2);
+      $('profile').style.display = 'block';
+      say('Авторизация VK ID прошла. Профиль получен. Supabase Auth-сессия пока не создана — нужен отдельный доверенный обмен через Edge Function.', 'good');
+      // Remove OAuth code from address bar after processing.
+      history.replaceState({}, document.title, location.pathname);
+    } catch (e) {
+      say('Ошибка обработки callback VK ID: ' + (e?.message || String(e)) + '. Проверьте Redirect URL, APP_ID и актуальный пример SDK.', 'bad');
+    } finally {
+      sessionStorage.removeItem('vkid_test_state');
+      sessionStorage.removeItem('vkid_test_verifier');
+    }
+  }
+  handleCallback();
+})();
+</script>
+</body>
+</html>
