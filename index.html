@@ -30,10 +30,10 @@ main{padding-bottom:64px}.profile{display:none}.profile.show{display:block}.cove
   <div class="status" id="status" role="status"></div>
   <details class="keypanel" id="keyPanel">
     <summary>Настройки API — подключить реальные данные</summary>
-    <div class="keyfields"><input id="apiKey" type="password" autocomplete="off" placeholder="Steam Web API Key"><button id="saveKey" type="button">Использовать в этой вкладке</button></div>
-    <div class="keywarn">Важно: этот демонстрационный HTML делает запросы прямо из браузера. Ключ не сохраняется на сервере, но остаётся доступен в текущей вкладке и инструментах разработчика. Для публичного сайта не встраивайте ключ во фронтенд — используйте собственный backend или Supabase Edge Function.</div>
+    <div class="keyfields"><input id="apiKey" type="password" autocomplete="off" placeholder="Supabase anon / publishable key"><button id="saveKey" type="button">Подключить</button></div>
+    <div class="keywarn">Важно: этот демонстрационный HTML делает запросы прямо из браузера. Здесь указывается только публичный Supabase anon/publishable key. Steam Web API Key должен храниться в Supabase Edge Function Secrets под именем STEAM_API_KEY. Не вводите Steam API Key в это поле.</div>
   </details>
-  <div class="demo-note">Сначала можно посмотреть демонстрационный профиль. Для живых запросов нужен Steam Web API Key.</div>
+  <div class="demo-note">Сначала можно посмотреть демонстрационный профиль. Для живых запросов нужны Supabase Edge Function и публичный Supabase key.</div>
 </section>
 <main class="wrap">
 <section class="profile" id="profile">
@@ -132,12 +132,20 @@ main{padding-bottom:64px}.profile{display:none}.profile.show{display:block}.cove
       detail('Публичная библиотека',gamesData?'Данные получены':'Не загружена');
     $('profile').scrollIntoView({behavior:'smooth',block:'start'});
   }
+  const SUPABASE_URL = 'https://cdapgmlwkdtxxmivzgdw.supabase.co';
   async function api(path,params){
-    const url=new URL('https://api.steampowered.com/'+path);
-    Object.entries({...params,key:apiKey,format:'json'}).forEach(([k,v])=>url.searchParams.set(k,v));
-    const res=await fetch(url);
-    if(!res.ok)throw new Error('Steam API ответил HTTP '+res.status+'. Проверьте ключ и доступность метода.');
-    return res.json();
+    const res=await fetch(SUPABASE_URL+'/functions/v1/steam-proxy',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'apikey':apiKey,
+        'Authorization':'Bearer '+apiKey
+      },
+      body:JSON.stringify({path,params})
+    });
+    const data=await res.json().catch(()=>({}));
+    if(!res.ok)throw new Error(data.error||('Supabase proxy returned HTTP '+res.status)+(data.details?': '+data.details:''));
+    return data;
   }
   function extractInput(raw){
     const s=raw.trim();
@@ -157,10 +165,10 @@ main{padding-bottom:64px}.profile{display:none}.profile.show{display:block}.cove
     if(!apiKey){
       const value=extractInput(raw).value;
       if(/^\d{17}$/.test(value)){
-        setStatus('Для загрузки реального профиля укажите Steam Web API Key в настройках ниже. Сейчас показывается демонстрационный профиль.','');
+        setStatus('Для загрузки реального профиля укажите публичный Supabase anon/publishable key в настройках ниже. Сейчас показывается демонстрационный профиль.','');
         renderProfile({...demo,steamid:value,personaname:'Steam Player '+value.slice(-4),profileurl:'https://steamcommunity.com/profiles/'+value+'/'},{},{response:{games:[],game_count:0}},{response:{games:[]}});
       }else{
-        setStatus('Введите Steam Web API Key в настройках ниже, затем повторите поиск. Для поиска по vanity-нику требуется обращение к Steam Web API.','error');
+        setStatus('Введите публичный Supabase anon/publishable key в настройках ниже, затем повторите поиск. Для поиска по vanity-нику требуется обращение к Steam Web API.','error');
       }
       return;
     }
@@ -180,11 +188,11 @@ main{padding-bottom:64px}.profile{display:none}.profile.show{display:block}.cove
       renderProfile(player,bans,games,recent);
       setStatus('Профиль загружен. Некоторые поля могут отсутствовать из-за настроек приватности.','ok');
     }catch(err){
-      setStatus(err.message+' Если браузер сообщает о CORS/network error, используйте backend-прокси: браузерный HTML не гарантирует прямой доступ к API Steam.','error');
+      setStatus(err.message+' Проверьте, что Edge Function steam-proxy развёрнута, а STEAM_API_KEY добавлен в Supabase Secrets.','error');
     }finally{$('searchBtn').disabled=false;$('searchBtn').textContent='Найти игрока ↗';}
   }
   $('searchForm').addEventListener('submit',e=>{e.preventDefault();if($('query').value.trim())search($('query').value);});
-  $('saveKey').addEventListener('click',()=>{apiKey=$('apiKey').value.trim();if(apiKey){setStatus('Ключ принят только в памяти этой вкладки. Теперь можно искать реальные профили.','ok');}else setStatus('Введите Steam Web API Key.','error');});
+  $('saveKey').addEventListener('click',()=>{apiKey=$('apiKey').value.trim();if(apiKey){setStatus('Supabase key принят только в памяти этой вкладки. Теперь можно искать реальные профили.','ok');}else setStatus('Введите Steam Web API Key.','error');});
   $('showMore').addEventListener('click',()=>{ownedVisible+=8;renderOwned();});
   $('copyId').addEventListener('click',()=>{
     if(!currentSteamId)return;
