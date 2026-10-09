@@ -70,6 +70,8 @@ main{width:min(100%,620px)}.brand{display:flex;align-items:center;gap:12px;margi
       const codeVerifier = Array.from(crypto.getRandomValues(new Uint8Array(32)), b => b.toString(16).padStart(2,'0')).join('');
       sessionStorage.setItem('vkid_test_state', state);
       sessionStorage.setItem('vkid_test_verifier', codeVerifier);
+      sessionStorage.setItem('vkid_test_app_id', appId);
+      sessionStorage.setItem('vkid_test_redirect_url', redirectUrl);
       window.VKID.Config.init({
         app: Number(appId),
         redirectUrl,
@@ -92,42 +94,69 @@ main{width:min(100%,620px)}.brand{display:flex;align-items:center;gap:12px;margi
     const params = new URLSearchParams(location.search);
     const code = params.get('code');
     const error = params.get('error');
-    if (error) { say('VK ID вернул ошибку: ' + error + (params.get('error_description') ? ' — ' + params.get('error_description') : ''), 'bad'); return; }
+    if (error) {
+      say('VK ID вернул ошибку: ' + error + (params.get('error_description') ? ' — ' + params.get('error_description') : ''), 'bad');
+      return;
+    }
     if (!code) return;
     const expectedState = sessionStorage.getItem('vkid_test_state');
     const receivedState = params.get('state');
-    if (expectedState && receivedState && expectedState !== receivedState) {
-      say('Проверка state не пройдена. Запустите авторизацию заново.', 'bad'); return;
+    if (!expectedState || !receivedState || expectedState !== receivedState) {
+      say('Проверка state не пройдена или данные теста потеряны. Запустите авторизацию заново.', 'bad');
+      return;
     }
     try {
-      say('VK ID вернул код авторизации. Проверяем, доступен ли профиль через SDK…');
-      // The SDK owns the OAuth exchange and may require device_id from the redirect.
-      const deviceId = params.get('device_id');
-      if (!deviceId) {
-        say('VK ID вернул code, но в URL не найден device_id. В зависимости от конфигурации приложения используйте официальный SDK flow и его callback-обработчик. Код не отправлялся в Supabase.', 'bad');
-        return;
-      }
+      const appId = sessionStorage.getItem('vkid_test_app_id');
+      const redirectUrl = sessionStorage.getItem('vkid_test_redirect_url');
       const verifier = sessionStorage.getItem('vkid_test_verifier');
-      const tokens = await window.VKID.Auth.exchangeCode(code, deviceId, verifier || undefined);
-      const accessToken = tokens?.access_token;
-      if (!accessToken) throw new Error('SDK не вернул access_token.');
-      const info = await window.VKID.Auth.userInfo(accessToken);
+      const deviceId = params.get('device_id');
+      if (!appId || !redirectUrl || !verifier || !deviceId) {
+        throw new Error('Не хватает app_id, redirect_url, code_verifier или device_id. Начните авторизацию заново.');
+      }
+      if (!window.VKID?.Config || !window.VKID?.Auth) {
+        throw new Error('Не загрузился VK ID SDK. Проверьте подключение к CDN.');
+      }
+
+      // Важно: после redirect браузер перезагрузил страницу, поэтому SDK нужно
+      // повторно инициализировать с теми же state/codeVerifier/redirectUrl.
+      window.VKID.Config.init({
+        app: Number(appId),
+        redirectUrl,
+        state: expectedState,
+        codeVerifier: verifier,
+        scope: 'email'
+      });
+
+      say('Обмениваем authorization code на токены VK ID…');
+      const tokens = await window.VKID.Auth.exchangeCode(code, deviceId, verifier);
+      if (!tokens?.access_token) throw new Error('VK ID не вернул access_token.');
+
+      say('Access token получен. Запрашиваем профиль VK ID…');
+      const info = await window.VKID.Auth.userInfo(tokens.access_token);
       const user = info?.user || info?.user_info || info;
       const first = user?.first_name || '';
       const last = user?.last_name || '';
       $('name').textContent = (first + ' ' + last).trim() || 'Пользователь VK';
-      $('vkid').textContent = 'VK ID: ' + (user?.user_id || user?.id || 'получен; формат ответа зависит от версии SDK');
+      $('vkid').textContent = 'VK ID: ' + (user?.user_id || user?.id || 'получен; проверьте формат ответа SDK');
       $('avatar').src = user?.avatar || user?.photo_200 || user?.photo_100 || '';
-      $('userData').textContent = JSON.stringify({profile: user, vk_token_received: true, supabase_auth_session_created: false}, null, 2);
+      $('userData').textContent = JSON.stringify({
+        profile: user,
+        token_type: tokens.token_type || null,
+        expires_in: tokens.expires_in || null,
+        access_token_received: true,
+        refresh_token_received: Boolean(tokens.refresh_token),
+        supabase_auth_session_created: false
+      }, null, 2);
       $('profile').style.display = 'block';
-      say('Авторизация VK ID прошла. Профиль получен. Supabase Auth-сессия пока не создана — нужен отдельный доверенный обмен через Edge Function.', 'good');
-      // Remove OAuth code from address bar after processing.
+      say('Успешно: VK ID выдал токен и вернул профиль. Сессия Supabase Auth ещё не создана — это отдельный этап интеграции.', 'good');
       history.replaceState({}, document.title, location.pathname);
     } catch (e) {
-      say('Ошибка обработки callback VK ID: ' + (e?.message || String(e)) + '. Проверьте Redirect URL, APP_ID и актуальный пример SDK.', 'bad');
+      say('Ошибка получения токена/профиля VK ID: ' + (e?.message || String(e)) + '. Проверьте APP_ID, Redirect URL и настройки приложения VK ID.', 'bad');
     } finally {
       sessionStorage.removeItem('vkid_test_state');
       sessionStorage.removeItem('vkid_test_verifier');
+      sessionStorage.removeItem('vkid_test_app_id');
+      sessionStorage.removeItem('vkid_test_redirect_url');
     }
   }
   handleCallback();
